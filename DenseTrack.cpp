@@ -168,8 +168,11 @@ int main(int argc, char** argv)
 				// if the trajectory achieves the maximal length
 				if(iTrack->index >= trackInfo.length) {
 					std::vector<Point2f> trajectory(trackInfo.length+1);
-					for(int i = 0; i <= trackInfo.length; ++i)
+					std::vector<Point2f> raw_trajectory(trackInfo.length+1);
+					for(int i = 0; i <= trackInfo.length; ++i) {
 						trajectory[i] = iTrack->point[i]*fscales[iScale];
+						raw_trajectory[i] = iTrack->point[i]*fscales[iScale];
+					}
 				
 					float mean_x(0), mean_y(0), var_x(0), var_y(0), length(0);
 					if(IsValid(trajectory, mean_x, mean_y, var_x, var_y, length)) {
@@ -182,8 +185,12 @@ int main(int argc, char** argv)
 					
 						// output the trajectory
 						for (int i = 0; i < trackInfo.length; ++i)
-							printf("%f\t%f\t", trajectory[i].x,trajectory[i].y);
+							printf("%f\t%f\t", i, trajectory[i].x, trajectory[i].y);
 		
+						// output the raw trajectory
+						for (int i = 0; i < trackInfo.length; ++i)
+							printf("%f\t%f\t", i, raw_trajectory[i].x, raw_trajectory[i].y);
+
 						PrintDesc(iTrack->hog, hogInfo, trackInfo);
 						PrintDesc(iTrack->hof, hofInfo, trackInfo);
 						PrintDesc(iTrack->mbhX, mbhInfo, trackInfo);
