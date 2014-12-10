@@ -4,10 +4,30 @@
 #include "OpticalFlow.h"
 
 #include <time.h>
+#include <string>
+#include <sstream>
+#include <iostream>
 
 using namespace cv;
 
-int show_track = 0; // set show_track = 1, if you want to visualize the trajectories
+int show_track = 1; // set show_track = 1, if you want to visualize the trajectories
+
+int start[19] = {15290, 17340, 18150, 19250, 20560, 24020, 40850, 41412, 41500, 47670, 50365, 50940, 52750, 54375, 55315, 59500, 60169, 60400, 60557};
+int end[19]   = {15425, 17700, 18240, 19450, 26400, 24100, 40900, 41500, 41630, 47750, 50500, 51050, 52860, 54475, 55500, 59560, 60219, 60500, 60600};
+
+
+int is_unusual(int frameNum)
+{
+    // returns 0 when it is usual, 1 when it is unusual
+    int unusual = 0;
+
+    for (int j=0;j<=19;j++){
+        if (frameNum >= start[j] && frameNum <= end[j]){
+            unusual = 1;
+        };
+    };
+    return unusual;
+};
 
 int main(int argc, char** argv)
 {
@@ -152,6 +172,18 @@ int main(int argc, char** argv)
 					continue;
 				}
 
+				// draw the trajectories at the first scale
+				if(show_track == 1 && iScale == 0) {
+					std::ostringstream str;
+					str << frame_num;
+					putText(image, str.str(), Point(400, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255), 1, 8);
+				};
+
+
+				if(iTrack->var_x + iTrack->var_y >= 5 && show_track == 1 && iScale == 0) {
+					DrawTrack(iTrack->point, iTrack->index, fscales[iScale], image, Scalar(255, 255, 255), is_unusual(frame_num));
+				};
+
 				// get the descriptors for the feature point
 				RectInfo rect;
 				GetRect(prev_point, rect, width, height, hogInfo);
@@ -160,10 +192,6 @@ int main(int argc, char** argv)
 				GetDesc(mbhMatX, rect, mbhInfo, iTrack->mbhX, index);
 				GetDesc(mbhMatY, rect, mbhInfo, iTrack->mbhY, index);
 				iTrack->addPoint(point);
-
-				// draw the trajectories at the first scale
-				if(show_track == 1 && iScale == 0)
-					DrawTrack(iTrack->point, iTrack->index, fscales[iScale], image);
 
 				// if the trajectory achieves the maximal length
 				if(iTrack->index >= trackInfo.length) {
@@ -182,8 +210,9 @@ int main(int argc, char** argv)
 						printf("%f\t", std::min<float>(std::max<float>(mean_x/float(seqInfo.width), 0), 0.999));
 						printf("%f\t", std::min<float>(std::max<float>(mean_y/float(seqInfo.height), 0), 0.999));
 						printf("%f\t", std::min<float>(std::max<float>((frame_num - trackInfo.length/2.0 - start_frame)/float(seqInfo.length), 0), 0.999));
-					
-						// output the trajectory
+
+
+							// output the trajectory
 						for (int i = 0; i < trackInfo.length; ++i)
 							printf("%f\t%f\t", i, trajectory[i].x, trajectory[i].y);
 		
